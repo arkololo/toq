@@ -8,6 +8,17 @@ Le warning Maven concernant `-Pproduction` est indépendant : aucun profil Maven
 
 ## Services et chemins
 
+Le fichier `railway.json` à la racine configure par défaut **frontend-edge** : builder Dockerfile, image frontend/Nginx et commande de démarrage Nginx explicite. Il évite l'auto-détection Maven sur le POM agrégateur lors de l'import du dépôt. Il configure uniquement ce service ; les API et Keycloak doivent sélectionner leur propre fichier dans Settings.
+
+Pour le service créé lors de l'import de ce dépôt, dont `pom.xml` est à la racine Git :
+
+1. Utiliser ce service comme `frontend-edge`.
+2. Root Directory : `/` ; Railway Config File : `/railway.json`.
+3. Variables : `PORT=8080` et `VITE_KEYCLOAK_URL=https://<domaine-public-keycloak>`.
+4. Pousser le fichier racine puis lancer un **nouveau build** de ce commit. Un simple redémarrage de l'ancienne image conserverait l'erreur.
+
+Dans les détails du nouveau déploiement, vérifier le builder `DOCKERFILE`, le chemin `frontend/Dockerfile.railway` et la commande Nginx. Railway indique la provenance des réglages avec une icône de fichier. Si le build exécute encore Maven ou si le démarrage contient `target/*jar`, la nouvelle configuration n'est pas appliquée au déploiement concerné.
+
 Créer huit services dans le même projet et le même environnement : PostgreSQL, Keycloak, les cinq API, puis le frontend. Utiliser les noms ci-dessous pour correspondre au DNS privé attendu par Nginx. PostgreSQL est créé avec le template Railway et un volume persistant.
 
 Pour les sept services construits depuis le dépôt, sélectionner le même dépôt et la même branche. **Root Directory doit être le répertoire contenant le POM parent**, car les Dockerfiles ont besoin de ses fichiers :
