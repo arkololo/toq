@@ -8,12 +8,11 @@ COPY services/recipe-service/pom.xml services/recipe-service/pom.xml
 COPY services/nutrition-service/pom.xml services/nutrition-service/pom.xml
 COPY services/planner-service/pom.xml services/planner-service/pom.xml
 COPY services/social-service/pom.xml services/social-service/pom.xml
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn -B -ntp -pl services/recipe-service -am dependency:go-offline
+# Keep Maven dependencies in this Docker layer, before copying application sources.
+RUN mvn -B -ntp -pl services/recipe-service -am dependency:go-offline
 
 COPY services/recipe-service/src services/recipe-service/src
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn -B -ntp -pl services/recipe-service -am package -DskipTests
+RUN mvn -B -ntp -pl services/recipe-service -am package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine@sha256:1a29e1fe337eb28b5bec30f0ee8ed29f0ff80ab6f75dcf9313efe82911065a52 AS runtime
 RUN apk add --no-cache curl \
