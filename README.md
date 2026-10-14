@@ -1,6 +1,6 @@
 # TOQ
 
-TOQ réunit les recettes, les repères nutritionnels, le planning hebdomadaire, les courses et le partage. Le frontend React reprend la navigation latérale et les éléments fournis dans `base/Charte graphique`. L'application tourne **uniquement sur la machine locale** avec Docker Compose.
+TOQ réunit les recettes, les repères nutritionnels, le planning hebdomadaire, les courses et le partage. Le frontend React reprend la navigation latérale et les éléments fournis dans `base/Charte graphique`. L'application démarre localement avec Docker Compose ; [le guide Railway](docs/RAILWAY.md) décrit la configuration du déploiement distant.
 
 ## Démarrage
 
@@ -56,5 +56,7 @@ npm run build
 ```
 
 Les services utilisent Java 21, Spring Boot et des bases PostgreSQL séparées. L'API passe par Nginx sur `localhost:8080`; seul Keycloak est également accessible sur `localhost:8081`. Les services métier et PostgreSQL n'ont aucun port hôte. `docker compose ps` affiche leur état. `docker compose logs --tail 80 <service>` aide à diagnostiquer une panne.
+
+Le déploiement de l'ensemble sur Railway est décrit dans [le guide Railway](docs/RAILWAY.md).
 
 Les décisions et limites sont décrites dans [l'état du projet](docs/STATUS.md), [l'architecture](docs/architecture/ARCHITECTURE_PHASE_0.md) et [la sécurité locale](docs/SECURITY.md).

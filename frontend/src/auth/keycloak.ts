@@ -1,7 +1,7 @@
 import Keycloak from 'keycloak-js'
 
 export const keycloak = new Keycloak({
-  url: 'http://localhost:8081',
+  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8081',
   realm: 'TOQ',
   clientId: 'toq-web',
 })

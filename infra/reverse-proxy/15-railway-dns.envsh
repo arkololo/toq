@@ -1,0 +1,8 @@
+#!/bin/sh
+# Sourced by the Nginx entrypoint before rendering templates.
+TOQ_DNS_RESOLVER=$(awk '/^nameserver / { print $2; exit }' /etc/resolv.conf)
+test -n "$TOQ_DNS_RESOLVER"
+case "$TOQ_DNS_RESOLVER" in
+    *:*) TOQ_DNS_RESOLVER="[$TOQ_DNS_RESOLVER]" ;;
+esac
+export TOQ_DNS_RESOLVER
