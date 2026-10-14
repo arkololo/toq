@@ -123,6 +123,10 @@ VITE_KEYCLOAK_URL=https://<domaine-public-keycloak>
 
 Cette URL publique, sans suffixe `/realms/TOQ` et sans slash final, est injectée **au build** dans le frontend et dans la configuration de sécurité du proxy. Reconstruire le frontend après toute modification de l'URL.
 
+Si le service frontend porte encore le nom `toq` lors de l'import du dépôt, ajouter la variable dans **toq → Variables**, dans l'environnement du déploiement. La valeur doit être l'URL publique du service **Keycloak**, par exemple `https://keycloak-production-xxxx.up.railway.app` (remplacer cet exemple par le domaine réel). Un fichier `.env` local ne configure pas ces variables Railway.
+
+Si Keycloak n'est pas encore créé, suivre d'abord la section Keycloak et lui attribuer un domaine public ciblant le port 8080. Ajouter ensuite `VITE_KEYCLOAK_URL` au frontend, appliquer les modifications Railway et déclencher un nouveau build. L'argument Dockerfile est déjà déclaré ; le message `Missing VITE_KEYCLOAK_URL` signale une variable absente ou vide avant l'installation des dépendances.
+
 Le Dockerfile Railway utilise une configuration Nginx dédiée : elle route les chemins API vers les cinq domaines `<service>.railway.internal:8080`, conserve les restrictions des endpoints internes et adapte la Content Security Policy au domaine Keycloak. Le DNS est relu périodiquement pour suivre les redéploiements des API. Le démarrage local conserve sa configuration Nginx et son URL Keycloak par défaut.
 
 ## Ordre et vérification
