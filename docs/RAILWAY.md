@@ -8,16 +8,9 @@ Le warning Maven concernant `-Pproduction` est indépendant : aucun profil Maven
 
 ## Services et chemins
 
-Le fichier `railway.json` à la racine configure par défaut **frontend-edge** : builder Dockerfile, image frontend/Nginx et commande de démarrage Nginx explicite. Il évite l'auto-détection Maven sur le POM agrégateur lors de l'import du dépôt. Il configure uniquement ce service ; les API et Keycloak doivent sélectionner leur propre fichier dans Settings.
+**Config as Code est déprécié.** Depuis le 28 août 2026, les services qui ne l'ont jamais utilisé ne peuvent plus l'activer. Le champ Railway Config File peut donc rester vide malgré la saisie d'un chemin. Les fichiers `railway.json` du dépôt sont des configurations historiques ; pour les nouveaux services, utiliser les variables et les réglages ci-dessous.
 
-Pour le service créé lors de l'import de ce dépôt, dont `pom.xml` est à la racine Git :
-
-1. Utiliser ce service comme `frontend-edge`.
-2. Root Directory : `/` ; Railway Config File : `/railway.json`.
-3. Variables : `PORT=8080` et `VITE_KEYCLOAK_URL=https://<domaine-public-keycloak>`.
-4. Pousser le fichier racine puis lancer un **nouveau build** de ce commit. Un simple redémarrage de l'ancienne image conserverait l'erreur.
-
-Dans les détails du nouveau déploiement, vérifier le builder `DOCKERFILE`, le chemin `frontend/Dockerfile.railway` et la commande Nginx. Railway indique la provenance des réglages avec une icône de fichier. Si le build exécute encore Maven ou si le démarrage contient `target/*jar`, la nouvelle configuration n'est pas appliquée au déploiement concerné.
+Le `railway.json` racine qui sélectionnait le frontend a été supprimé : une configuration racine commune pouvait faire construire le frontend par Keycloak et les API. Pousser cette suppression sur la branche réellement déployée par Railway. Les fichiers historiques sous les dossiers des services ne doivent pas être sélectionnés lors d'un nouveau déploiement ; le choix du Dockerfile passe par les variables ci-dessous.
 
 Créer huit services dans le même projet et le même environnement : PostgreSQL, Keycloak, les cinq API, puis le frontend. Utiliser les noms ci-dessous pour correspondre au DNS privé attendu par Nginx. PostgreSQL est créé avec le template Railway et un volume persistant.
 
@@ -26,21 +19,25 @@ Pour les sept services construits depuis le dépôt, sélectionner le même dép
 - Si le dépôt commence par `pom.xml`, `services/`, `frontend/` : laisser Root Directory vide (ou `/`).
 - Si le dépôt contient ces fichiers dans `toq/` : Root Directory = `/toq`.
 
-Dans Settings, renseigner **Railway Config File** pour chaque service :
+Dans **Variables de chaque service**, définir `RAILWAY_DOCKERFILE_PATH` :
 
-| Service | Config File si le POM est à la racine | Dockerfile (relatif à Root Directory) |
-| --- | --- | --- |
-| user-service | /services/user-service/railway.json | services/user-service/Dockerfile |
-| recipe-service | /services/recipe-service/railway.json | services/recipe-service/Dockerfile |
-| nutrition-service | /services/nutrition-service/railway.json | services/nutrition-service/Dockerfile |
-| planner-service | /services/planner-service/railway.json | services/planner-service/Dockerfile |
-| social-service | /services/social-service/railway.json | services/social-service/Dockerfile |
-| keycloak | /infra/keycloak/railway.json | infra/keycloak/Dockerfile |
-| frontend-edge | /frontend/railway.json | frontend/Dockerfile.railway |
+| Service | Valeur de RAILWAY_DOCKERFILE_PATH |
+| --- | --- |
+| user-service | services/user-service/Dockerfile |
+| recipe-service | services/recipe-service/Dockerfile |
+| nutrition-service | services/nutrition-service/Dockerfile |
+| planner-service | services/planner-service/Dockerfile |
+| social-service | services/social-service/Dockerfile |
+| keycloak | infra/keycloak/Dockerfile |
+| toq / frontend-edge | frontend/Dockerfile.railway |
 
-Si Root Directory est `/toq`, **préfixer les chemins Config File par `/toq`**, mais garder les chemins Dockerfile du tableau. Railway résout le fichier de configuration depuis la racine du dépôt, indépendamment de Root Directory.
+Les valeurs du tableau sont relatives à la racine de construction contenant le POM parent.
 
-Supprimer les anciennes commandes Build/Start personnalisées et les variables `RAILWAY_DOCKERFILE_PATH` contradictoires. Les fichiers JSON sélectionnent le builder Dockerfile et, pour les API, la commande `java -jar /app/app.jar`. Le frontend et Keycloak utilisent l'entrypoint de leur image.
+Dans Settings, supprimer les commandes Build/Start personnalisées héritées d'un autre service. Les Dockerfiles définissent eux-mêmes le démarrage : Java pour les API, Keycloak pour l'authentification et Nginx pour le frontend. Supprimer également tout healthcheck `/healthz` hérité du frontend sur les API et Keycloak. Le frontend peut conserver `/healthz`.
+
+Appliquer les variables et les réglages en attente puis déclencher un **nouveau build**. Vérifier le Dockerfile réellement utilisé dans ses logs : les builds Keycloak et API ne doivent pas contenir `VITE_KEYCLOAK_URL` ou des fichiers Nginx. Un simple redémarrage de l'ancienne image conserve son comportement.
+
+Seul le frontend nécessite `VITE_KEYCLOAK_URL=https://<domaine-public-keycloak>` pendant son build.
 
 Définir `PORT=8080` sur les sept services applicatifs. Les API gardent leur port de management 8081. Générer deux domaines publics HTTPS, avec le port cible 8080 : un pour `frontend-edge`, un pour `keycloak`.
 
